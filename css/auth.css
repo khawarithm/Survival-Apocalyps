@@ -1,0 +1,108 @@
+/* 
+  ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v2.0
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : css/auth.css
+  DESC                  : Desain Antarmuka Gerbang Login/Register (Mobile Landscape)
+  ========================================================================
+*/
+
+/* Memastikan background layar otentikasi mengambil aset yang benar */
+body.auth-body {
+    background: #151713 url('../assets/bg-auth.png') no-repeat center center/cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace; /* Font militer default */
+}
+
+/* Kotak Form Utama */
+.auth-container {
+    background: rgba(20, 22, 18, 0.95);
+    border: 3px solid #5c6628; /* Khaki gelap */
+    padding: 25px;
+    width: 80vw;
+    max-width: 450px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+    border-radius: 4px;
+}
+
+/* Judul Form */
+.auth-title {
+    text-align: center;
+    color: #ffd700; /* Gold */
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    margin-top: 0;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px #000;
+}
+
+/* Grup Input (Label + Input) */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    color: #c3b091; /* Khaki terang */
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Kolom Input (Ramah Jempol) */
+.form-group input {
+    background: #2a2e24;
+    border: 2px solid #5c6628;
+    color: #fff;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #ffd700; /* Berubah emas saat diklik */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Area Tombol */
+.auth-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.auth-actions button {
+    flex: 1;
+    padding: 14px 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 1px;
+}
+
+/* Teks Toggle Mode (Login/Register) */
+.toggle-auth-mode {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #c3b091;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.toggle-auth-mode:hover {
+    color: #ffd700;
+}

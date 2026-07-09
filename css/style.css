@@ -1,1 +1,220 @@
+/* 
+  ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v2.0
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : css/style.css
+  DESC                  : Global UI, Tema Militer, & Landscape Enforcer
+  ========================================================================
+*/
 
+/* ==========================================================================
+   VARIABEL & RESET GLOBAL
+   ========================================================================== */
+:root {
+    --color-bg-dark: #151713;
+    --color-panel-bg: rgba(30, 34, 25, 0.95);
+    --color-military-green: #3a421a;
+    --color-khaki-dark: #5c6628;
+    --color-khaki-light: #c3b091;
+    --color-gold: #ffd700;
+    --color-danger: #8b0000;
+    --color-danger-flash: #ff4500;
+    --font-military: 'Courier New', Courier, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none; /* Mencegah teks terblokir saat diketuk cepat */
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: #fff;
+    font-family: var(--font-military);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Latar Belakang Khusus Lobby */
+body.lobby-body {
+    background: url('../assets/bg-lobby.png') no-repeat center center/cover;
+}
+
+/* ==========================================================================
+   KELAS UTILITAS (TACTICAL HELPERS)
+   ========================================================================== */
+.flex { display: flex; }
+.flex-column { display: flex; flex-direction: column; }
+.flex-between { display: flex; justify-content: space-between; }
+.align-center { align-items: center; }
+.justify-center { justify-content: center; }
+.gap-5 { gap: 5px; }
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+.p-10 { padding: 10px; }
+.p-15 { padding: 15px; }
+.pb-5 { padding-bottom: 5px; }
+.m-0 { margin: 0; }
+.mt-auto { margin-top: auto; }
+
+.text-gold { color: var(--color-gold); }
+.text-khaki { color: var(--color-khaki-light); }
+.text-danger-flash { color: var(--color-danger-flash); font-weight: bold; }
+.text-micro { font-size: 0.65rem; }
+.text-small { font-size: 0.8rem; }
+.text-large { font-size: 1.2rem; }
+.text-xlarge { font-size: 1.5rem; }
+
+.border-bottom { border-bottom: 1px solid var(--color-khaki-dark); }
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   TATA LETAK LOBBY (MARKAS)
+   ========================================================================== */
+.ui-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.4); /* Efek gelap agar UI menonjol */
+}
+
+.header-bar {
+    background: var(--color-panel-bg);
+    border-bottom: 2px solid var(--color-khaki-dark);
+    height: 15vh;
+}
+
+.main-lobby-area {
+    height: 85vh;
+}
+
+.stats-box {
+    background: rgba(20, 22, 18, 0.9);
+    border: 1px solid var(--color-khaki-dark);
+    padding: 10px;
+    font-size: 0.85rem;
+}
+
+/* XP Bar */
+.xp-container { width: 150px; }
+.xp-bar {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border: 1px solid var(--color-khaki-dark);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.xp-fill {
+    height: 100%;
+    background: var(--color-gold);
+    transition: width 0.3s ease;
+}
+
+/* ==========================================================================
+   TOMBOL MILITER (BUTTONS)
+   ========================================================================== */
+button {
+    font-family: var(--font-military);
+    border: none;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:active { transform: scale(0.95); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-action {
+    background: linear-gradient(to bottom, #5c6628, #3a421a);
+    color: var(--color-gold);
+    border: 2px solid var(--color-gold);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+.btn-action:hover { background: linear-gradient(to bottom, #6d7830, #4b5522); }
+
+.btn-secondary {
+    background: #2a2e24;
+    color: var(--color-khaki-light);
+    border: 1px solid var(--color-khaki-dark);
+}
+.btn-secondary:hover { border-color: var(--color-khaki-light); color: #fff; }
+
+.btn-close {
+    background: var(--color-danger);
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #fff;
+}
+
+/* ==========================================================================
+   SISTEM MODAL & CUSTOM ALERT
+   ========================================================================== */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--color-panel-bg);
+    border: 2px solid var(--color-khaki-dark);
+    box-shadow: 0 0 15px #000;
+}
+
+.modal-header {
+    background: #111;
+    padding: 10px 15px;
+    border-bottom: 2px solid var(--color-khaki-dark);
+}
+
+.custom-alert-box { width: 300px; text-align: center; }
+.custom-alert-body { padding: 20px; }
+.custom-alert-msg { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; color: #fff; }
+.btn-large { width: 100%; padding: 10px; font-size: 1rem; }
+
+/* ==========================================================================
+   PENGUNCI LAYAR LANDSCAPE (LANDSCAPE ENFORCER)
+   ========================================================================== */
+#landscape-lock-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #000;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.landscape-warning-box {
+    border: 2px dashed var(--color-danger-flash);
+    padding: 30px;
+    background: rgba(139, 0, 0, 0.2);
+}
+
+/* Deteksi Orientasi Perangkat */
+@media screen and (orientation: landscape) {
+    #landscape-lock-screen {
+        display: none !important;
+    }
+}
+
+@media screen and (orientation: portrait) {
+    #landscape-lock-screen {
+        display: flex !important;
+    }
+}

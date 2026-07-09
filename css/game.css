@@ -1,0 +1,217 @@
+/* 
+  ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v2.0
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : css/game.css
+  DESC                  : Animasi, Sprite Sizing, & Render Grafis Medan Tempur
+  ========================================================================
+*/
+
+/* Container Utama Pertempuran */
+body.game-body {
+    background: #000;
+    margin: 0;
+    padding: 0;
+}
+
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ==========================================================================
+   HUD PANEL (PANEL ATAS)
+   ========================================================================== */
+.game-hud {
+    height: 15vh;
+    background: rgba(15, 17, 13, 0.9);
+    border-bottom: 3px solid #ffd700;
+    z-index: 10;
+}
+
+.hp-bar-container {
+    width: 25vw;
+    max-width: 250px;
+    height: 14px;
+    background: #222;
+    border: 2px solid var(--color-khaki-dark);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.hp-fill-bar {
+    height: 100%;
+    background: linear-gradient(to right, #00ff00, #32cd32);
+    transition: width 0.1s ease, background 0.3s;
+}
+
+/* Kondisi HP Sekarat (<30%) */
+.hp-fill-bar.critical {
+    background: linear-gradient(to right, #ff0000, #8b0000);
+    animation: pulse-danger 0.5s infinite alternate;
+}
+
+.icon-match-ui {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   BATTLEFIELD ARENA (MEDAN PERTEMPURAN)
+   ========================================================================= */
+.battlefield-arena {
+    height: 85vh;
+    width: 100vw;
+    position: relative;
+    background: url('../assets/bg-battle.png') no-repeat center center/cover;
+    overflow: hidden;
+}
+
+/* Benteng Pertahanan (Sisi Kiri) */
+.base-fortress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 15vw; /* Mengambil 15% lebar layar */
+    height: 100%;
+    border-right: 4px dashed #5c6628;
+    background: rgba(58, 66, 26, 0.2);
+    z-index: 2;
+    transition: background 0.2s;
+}
+
+/* Efek Benteng Diserang */
+.base-fortress.zombie-hit {
+    background: rgba(255, 0, 0, 0.4);
+}
+
+/* Sistem Jalur Layering */
+.spawn-lane {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+}
+.lane-soldiers { z-index: 3; }
+.lane-combat { z-index: 4; }
+
+/* ==========================================================================
+   UNIT INDIVIDU & PROYEKTIL (SPRITES & GIFS)
+   ========================================================================== */
+/* Tentara Kita */
+.soldier-unit {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background: url('../assets/unit.png') no-repeat center center/contain;
+    transform: translateY(-50%);
+}
+
+/* Proyektil Peluru */
+.bullet {
+    position: absolute;
+    width: 8px;
+    height: 4px;
+    background: #ffd700;
+    box-shadow: 0 0 4px #ffd700;
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+/* Zombi Biasa (.gif diinjeksi via JS background) */
+.zombie-unit {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: url('../assets/zombie.gif') no-repeat center center/contain;
+    transform: translateY(-50%);
+    transition: filter 0.1s;
+}
+
+/* Zombi Bos Besar (.gif diinjeksi via JS background) */
+.zombie-boss {
+    width: 80px !important;
+    height: 80px !important;
+    background: url('../assets/boss.gif') no-repeat center center/contain;
+}
+
+/* Efek Zombi Tertembak */
+.zombie-hit {
+    filter: brightness(3) sepia(1) hue-rotate(-50deg) !important;
+}
+
+/* Partikel Hancur saat Mati */
+.particle-death {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(139, 0, 0, 0.7);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    animation: explode-fade 0.4s forwards ease-out;
+}
+
+/* ==========================================================================
+   OVERLAY ALERT & ANIMASI ENGINE
+   ========================================================================== */
+.boss-warning-overlay {
+    position: absolute;
+    top: 30%;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+}
+
+.boss-title-alert {
+    background: rgba(0, 0, 0, 0.85);
+    border-top: 3px solid #ff4500;
+    border-bottom: 3px solid #ff4500;
+    color: #ff4500;
+    font-size: 1.8rem;
+    font-weight: bold;
+    padding: 15px 0;
+    letter-spacing: 3px;
+    animation: flash-red 0.5s infinite alternate;
+}
+
+/* Efek Guncangan Layar (Screen Shake) */
+.screen-shake {
+    animation: shake-device 0.15s infinite;
+}
+
+/* KEYFRAMES ANIMASI TAKTIS */
+@keyframes pulse-danger {
+    from { opacity: 1; }
+    to { opacity: 0.5; }
+}
+
+@keyframes flash-red {
+    from { text-shadow: 0 0 5px #000; }
+    to { text-shadow: 0 0 15px #ff4500; }
+}
+
+@keyframes explode-fade {
+    to {
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes shake-device {
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(0px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(2px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(2px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
