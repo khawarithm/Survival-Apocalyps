@@ -1,0 +1,139 @@
+<!-- 
+  ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v2.0
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : game.html
+  DESC                  : Arena Pertempuran Utama (Battlefield View)
+  ========================================================================
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Survivor Apocalyps - Frontline Arena</title>
+    
+    <!-- PWA Link -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game.css">
+    
+    <!-- Firebase SDK compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="game-body">
+
+    <!-- OVERLAY: PENGUNCI LAYAR LANDSCAPE -->
+    <div id="landscape-lock-screen" class="hidden">
+        <div class="landscape-warning-box">
+            <h2 class="text-danger-flash" style="margin-bottom: 15px;">ROTATE DEVICE!</h2>
+            <p style="color: var(--color-khaki-light); font-size: 0.9rem;">Komandan, putar perangkat ke posisi Landscape demi pengalaman tempur maksimal!</p>
+        </div>
+    </div>
+
+    <!-- MODAL: CUSTOM TACTICAL ALERT -->
+    <div id="custom-tactical-alert" class="modal hidden" style="z-index: 99999;">
+        <div class="modal-content custom-alert-box">
+            <div class="modal-header">
+                <span style="color: var(--color-gold);">[ SYSTEM NOTICE ]</span>
+            </div>
+            <div class="custom-alert-body">
+                <p id="custom-alert-text" class="custom-alert-msg">MESSAGE</p>
+                <button id="btn-custom-alert-ok" class="btn-secondary btn-large">ROGER THAT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME CONTAINER -->
+    <div id="game-container" class="game-container">
+        
+        <!-- TOP HUD PANEL -->
+        <div class="game-hud flex-between align-center p-10">
+            <!-- HP Benteng -->
+            <div class="hud-base-hp flex align-center gap-10">
+                <span class="text-micro text-khaki">BASE HEALTH:</span>
+                <div class="hp-bar-container">
+                    <div id="hp-bar-fill" class="hp-fill-bar" style="width: 100%;"></div>
+                </div>
+                <span id="hp-text" class="text-small text-gold" style="min-width: 90px; text-align: right;">500/500</span>
+            </div>
+            
+            <!-- Informasi Wave -->
+            <div class="hud-wave text-center">
+                <span class="text-small text-khaki">WAVE</span>
+                <h2 id="current-wave-display" class="text-danger-flash m-0" style="font-size: 1.5rem; line-height: 1;">1</h2>
+            </div>
+
+            <!-- Perolehan Sesi Match -->
+            <div class="hud-stats flex align-center gap-15">
+                <div class="flex align-center gap-5">
+                    <img src="assets/coin.png" alt="coin" class="icon-match-ui" onerror="this.style.display='none'">
+                    <span class="text-micro text-khaki">COINS:</span>
+                    <span id="match-coin" class="text-gold text-large">0</span>
+                </div>
+                <div class="flex align-center gap-5">
+                    <span class="text-micro text-khaki">KILLS:</span>
+                    <span id="match-kills" class="text-danger-flash text-large">0</span>
+                </div>
+                <button id="btn-pause" class="btn-secondary text-micro" style="padding: 5px 10px;">PAUSE</button>
+            </div>
+        </div>
+
+        <!-- BATTLEFIELD FIELD (MEDAN PERTEMPURAN) -->
+        <div id="battlefield" class="battlefield-arena">
+            <!-- Benteng Pertahanan / Tembok Kiri -->
+            <div id="player-base" class="base-fortress"></div>
+            
+            <!-- Jalur Spawn Tentara -->
+            <div id="army-spawn-lane" class="spawn-lane lane-soldiers"></div>
+            
+            <!-- Jalur Spawn Peluru & Zombi -->
+            <div id="zombie-spawn-lane" class="spawn-lane lane-combat"></div>
+
+            <!-- ALERT BOS DETEKSI -->
+            <div id="boss-warning" class="boss-warning-overlay hidden">
+                <div class="boss-title-alert">⚠️ WARNING: BOSS APPROACHING ⚠️</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- INTERFACE: PAUSE MENU OVERLAY -->
+    <div id="pause-menu" class="modal hidden" style="z-index: 5000;">
+        <div class="modal-content text-center" style="width: 250px; padding: 20px;">
+            <h3 class="text-gold m-0 pb-10 border-bottom">TACTICAL PAUSED</h3>
+            <div class="flex-column gap-10 mt-15">
+                <button id="btn-resume" class="btn-action" style="padding: 12px 0;">RESUME COMBAT</button>
+                <button id="btn-quit-to-lobby" class="btn-secondary" style="padding: 10px 0; border-color: var(--color-danger); color:var(--color-danger)">ABANDON MISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERFACE: GAME OVER SCREEN -->
+    <div id="game-over-screen" class="modal hidden" style="z-index: 6000; background: rgba(0,0,0,0.95);">
+        <div class="modal-content text-center" style="width: 350px; padding: 25px; border-color: var(--color-danger);">
+            <h2 class="text-danger-flash m-0 pb-5">MISSION FAILED</h2>
+            <p class="text-khaki text-micro border-bottom pb-10">Pangkalan militer berhasil ditembus oleh wabah infeksi zombi.</p>
+            
+            <div class="stats-box flex-column gap-5 mt-15 mb-20" style="background: rgba(0,0,0,0.5); text-align: left;">
+                <div class="flex-between text-small"><span>Bertahan Hingga:</span> <span class="text-gold">WAVE <span id="go-wave">1</span></span></div>
+                <div class="flex-between text-small"><span>Koin Perang Didapat:</span> <span class="text-gold">+<span id="go-coin">0</span> Coins</span></div>
+                <div class="flex-between text-small"><span>Bonus Pengalaman:</span> <span class="text-gold">+<span id="go-xp">0</span> XP</span></div>
+            </div>
+
+            <div class="flex gap-10">
+                <button id="btn-restart" class="btn-action" style="flex: 1; padding: 12px 0;">DEPLOY AGAIN</button>
+                <button id="btn-go-lobby" class="btn-secondary" style="flex: 1; padding: 12px 0;">RETURN TO BASE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENGINE SCRIPTS -->
+    <script src="js/firebase-init.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!-- 
+  ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v2.1 (ITEM & SKILL UPDATE)
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : lobby.html
+  DESC                  : Markas Utama + Display Gudang Item & Status Skill
+  ========================================================================
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Survivor Apocalyps - Command Center</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="lobby-body">
+
+    <!-- OVERLAY: PENGUNCI LAYAR LANDSCAPE -->
+    <div id="landscape-lock-screen" class="hidden">
+        <div class="landscape-warning-box">
+            <h2 class="text-danger-flash" style="margin-bottom: 15px;">ROTATE DEVICE!</h2>
+            <p style="color: var(--color-khaki-light); font-size: 0.9rem;">Komandan, putar perangkat ke posisi Landscape demi pengalaman tempur maksimal!</p>
+        </div>
+    </div>
+
+    <!-- MODAL: CUSTOM TACTICAL ALERT -->
+    <div id="custom-tactical-alert" class="modal hidden" style="z-index: 9999;">
+        <div class="modal-content custom-alert-box">
+            <div class="modal-header">
+                <span style="color: var(--color-gold);">[ SYSTEM NOTICE ]</span>
+            </div>
+            <div class="custom-alert-body">
+                <p id="custom-alert-text" class="custom-alert-msg">MESSAGE</p>
+                <button id="btn-custom-alert-ok" class="btn-secondary btn-large">ROGER THAT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN UI: LOBBY CONTAINER -->
+    <div class="ui-container">
+        
+        <!-- HEADER: PROFIL & LOGOUT -->
+        <header class="header-bar flex-between align-center p-10">
+            <div class="player-info flex align-center gap-15">
+                <div class="rank-badge">
+                    <span style="font-size:0.7rem; color:var(--color-khaki)">RANK LV:</span>
+                    <span id="player-level" class="text-gold text-large">1</span>
+                </div>
+                <div class="xp-container">
+                    <div class="text-small" id="player-name-display" style="margin-bottom: 3px;">SOLDIER</div>
+                    <div class="xp-bar">
+                        <div id="xp-bar-fill" class="xp-fill" style="width: 0%;"></div>
+                    </div>
+                    <div id="xp-text" class="text-micro text-khaki" style="margin-top:2px;">0 / 100 XP</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="btn-logout" class="btn-secondary text-small" style="border-color: var(--color-danger); color: var(--color-danger);">LOGOUT</button>
+            </div>
+        </header>
+
+        <!-- KONTEN TENGAH -->
+        <main class="main-lobby-area flex p-10 gap-15" style="overflow-y: auto;">
+            
+            <!-- PANEL KIRI: LOGISTIK, ITEM, & STATISTIK -->
+            <section class="left-panel flex-column gap-10" style="flex: 1; max-height: 80vh; overflow-y: auto; padding-right: 5px;">
+                
+                <!-- GUDANG LOGISTIK -->
+                <div class="stats-box flex-column gap-5">
+                    <h3 class="text-gold border-bottom pb-5 m-0">GUDANG LOGISTIK</h3>
+                    <div class="flex-between"><span>Koin Militer:</span> <span id="coin-count" class="text-gold">0</span></div>
+                    <div class="flex-between"><span>Kulit (Leather):</span> <span id="mat-leather" class="text-khaki">0</span></div>
+                    <div class="flex-between"><span>Besi (Iron):</span> <span id="mat-iron" class="text-khaki">0</span></div>
+                    <div class="flex-between"><span>Kristal (Crystal):</span> <span id="mat-crystal" class="text-khaki">0</span></div>
+                    <div class="flex-between"><span>Nuke Core:</span> <span id="mat-nuke" class="text-danger-flash">0</span></div>
+                </div>
+
+                <!-- BARU: INVENTORIS TAKTIS (ITEM & SKILL STATUS) -->
+                <div class="stats-box flex-column gap-5">
+                    <h3 class="text-gold border-bottom pb-5 m-0">INVENTORIS TAKTIS</h3>
+                    <div class="flex-between"><span>Tactical Medkit:</span> <span id="item-medkit" class="text-gold">0</span></div>
+                    <div class="flex-between"><span>Plasma Grenade:</span> <span id="item-grenade" class="text-gold">0</span></div>
+                    <div class="flex-between"><span>Skill Airstrike:</span> <span id="skill-status-airstrike" class="text-khaki">LOCKED</span></div>
+                    <div class="flex-between"><span>Skill Overdrive:</span> <span id="skill-status-overdrive" class="text-khaki">LOCKED</span></div>
+                </div>
+
+                <!-- REKAM JEJAK -->
+                <div class="stats-box flex-column gap-5">
+                    <h3 class="text-gold border-bottom pb-5 m-0">REKAM JEJAK</h3>
+                    <div class="flex-between"><span>Wave Tertinggi:</span> <span id="stat-high-wave" class="text-khaki">0</span></div>
+                    <div class="flex-between"><span>Total Zombi Dibunuh:</span> <span id="stat-total-kills" class="text-khaki">0</span></div>
+                    <div class="flex-between"><span>Bos Dieksekusi:</span> <span id="stat-boss-kills" class="text-khaki">0</span></div>
+                </div>
+                
+                <!-- TOMBOL CLOUD SAVE -->
+                <button id="btn-cloud-save" class="btn-secondary" style="padding: 8px 0;">SYNC CLOUD SAVE</button>
+                
+            </section>
+
+            <!-- PANEL KANAN: NAVIGASI STRATEGIS -->
+            <section class="right-panel flex-column justify-center gap-10" style="flex: 1.3; align-items: center;">
+                
+                <!-- TOMBOL DEPLOY / PLAY -->
+                <button id="btn-play" class="btn-action text-xlarge" style="width: 85%; padding: 20px 0; letter-spacing: 2px;">DEPLOY TO BATTLE</button>
+                
+                <div class="flex gap-10" style="width: 85%;">
+                    <button id="btn-menu-upgrade" class="btn-secondary" style="flex:1; padding: 12px 0; font-size: 0.75rem;">ARMORY (UPGRADE)</button>
+                    <button id="btn-menu-shop" class="btn-secondary" style="flex:1; padding: 12px 0; font-size: 0.75rem;">BLACK MARKET</button>
+                </div>
+                
+                <button id="btn-menu-milestone" class="btn-secondary" style="width: 85%; padding: 10px 0; font-size: 0.8rem;">CAREER MILESTONES</button>
+                
+                <!-- KREDIT SINGKAT DI UI LOBBY -->
+                <div style="font-size: 0.55rem; color: #444; margin-top: 5px;">
+                    v2.1 Item-Skill System Enabled &copy; 2026
+                </div>
+                
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL MULTIGUNA UNTUK UPGRADE/SHOP/MILESTONE -->
+    <div id="lobby-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px; width: 90vw;">
+            <div class="modal-header flex-between align-center">
+                <h2 id="modal-title" class="text-gold m-0" style="font-size: 1.1rem;">TITLE</h2>
+                <button id="btn-close-modal" class="btn-close">X</button>
+            </div>
+            <div id="modal-body" class="modal-body p-15" style="max-height: 60vh; overflow-y: auto;">
+                <!-- Konten diinjeksi via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA SISTEM -->
+    <script src="js/firebase-init.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>
