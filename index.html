@@ -1,33 +1,31 @@
 <!-- 
   ========================================================================
-  OPERATION: SURVIVOR APOCALYPS v2.0
-  COMMANDER / DEVELOPER : [Axel]
-  DESIGNER : [Jaysen]
-  DESC                  : Pintu Gerbang (Login & Register) Firebase
+  OPERATION: SURVIVOR APOCALYPS v3.0 (ACTION-DEFENSE UPDATE)
+  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
+  TACTICAL AI SUPPORT   : Gemini
+  FILE                  : index.html
+  DESC                  : Layar Login + Sistem Anti-Potong (App Wrapper)
   ========================================================================
 -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>Survivor Apocalyps - Login Gate</title>
+    <!-- Peningkatan viewport untuk Fullscreen & Immersive Mode -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, orientation=landscape">
+    <title>Survivor Apocalyps - Frontline Command V3.0</title>
     
-    <!-- Integrasi PWA -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Resource Desain -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/auth.css">
     
-    <!-- Firebase SDK Compat Core (Stabil untuk Vanilla JS) -->
+    <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body class="auth-body">
 
-    <!-- OVERLAY: PENGUNCI LAYAR LANDSCAPE (MOBILE) -->
+    <!-- OVERLAY: PENGUNCI LAYAR LANDSCAPE -->
     <div id="landscape-lock-screen" class="hidden">
         <div class="landscape-warning-box">
             <h2 class="text-danger-flash" style="margin-bottom: 15px;">ROTATE DEVICE!</h2>
@@ -35,49 +33,32 @@
         </div>
     </div>
 
-    <!-- MODAL: CUSTOM TACTICAL ALERT -->
-    <div id="custom-tactical-alert" class="modal hidden">
-        <div class="modal-content custom-alert-box">
-            <div class="modal-header">
-                <span style="color: var(--color-gold);">[ SYSTEM NOTICE ]</span>
-            </div>
-            <div class="custom-alert-body">
-                <p id="custom-alert-text" class="custom-alert-msg">MESSAGE</p>
-                <button id="btn-custom-alert-ok" class="btn-secondary btn-large">ROGER THAT</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- KOTAK AUTENTIKASI (LOGIN / REGISTER) -->
-    <div class="auth-container">
-        <h1 class="auth-title" id="auth-box-title">SECURE LOGIN GARRISON</h1>
+    <!-- WRAPPER V3.0: Sistem Skala Resolusi Anti-Potong -->
+    <div id="app-wrapper" class="app-wrapper">
         
-        <form id="auth-form" onsubmit="return false;">
-            <div class="form-group">
-                <label>EMAIL MILITER :</label>
-                <input type="email" id="auth-email" required placeholder="soldier@garrison.com">
-            </div>
-            <div class="form-group">
-                <label>KATA SANDI :</label>
-                <input type="password" id="auth-password" required placeholder="******">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1 class="text-gold m-0">SURVIVOR APOCALYPS</h1>
+                <p class="text-khaki text-small mt-5">FRONTLINE COMMAND V3.0</p>
             </div>
             
-            <div class="auth-actions">
-                <button type="submit" id="btn-primary-auth" class="btn-action">SIGN IN</button>
+            <div class="auth-form flex-column gap-15 mt-20">
+                <input type="email" id="email" placeholder="MILITARY EMAIL (e.g. jhon@army.com)" class="mil-input">
+                <input type="password" id="password" placeholder="ACCESS PIN (min. 6 chars)" class="mil-input">
+                
+                <div class="flex gap-10 mt-10">
+                    <button id="btn-login" class="btn-action flex-1">DEPLOY (LOGIN)</button>
+                    <button id="btn-register" class="btn-secondary flex-1">ENLIST (REGISTER)</button>
+                </div>
             </div>
-        </form>
-        
-        <div id="auth-toggle-msg" class="toggle-auth-mode">Belum punya akun? Daftarkan Pasukan Baru</div>
-        
-        <!-- KREDIT SINGKAT DI UI -->
-        <div style="text-align: center; margin-top: 15px; font-size: 0.6rem; color: #555;">
-            v2.0 &copy; 2026 Survivor Apocalyps Command
+            
+            <div id="auth-msg" class="auth-msg text-center mt-15 text-danger-flash"></div>
         </div>
+
     </div>
 
-    <!-- LOGIKA SISTEM -->
+    <!-- ENGINE SCRIPTS -->
     <script src="js/firebase-init.js"></script>
-    <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
 </body>
 </html>
