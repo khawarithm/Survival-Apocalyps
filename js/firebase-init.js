@@ -24,6 +24,7 @@ if (!firebase.apps.length) {
 }
 
 // Inisialisasi Layanan (Auth & Firestore) agar bisa dipanggil skrip lain
+window.FirebaseApp = firebase;
 window.FirebaseAuth = firebase.auth();
 window.FirebaseDB = firebase.firestore();
 
