@@ -1,22 +1,20 @@
 /* 
   ========================================================================
-  OPERATION: SURVIVOR APOCALYPS v2.1 (ITEM & SKILL UPDATE)
-  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
-  TACTICAL AI SUPPORT   : Gemini
+  OPERATION: SURVIVOR APOCALYPS v3.0 (ACTION-DEFENSE UPDATE)
   FILE                  : js/main.js
-  DESC                  : Core Data Manager, Cloud Save, & PWA Engine + Item/Skill Schema
+  DESC                  : Firebase Data Manager, PWA, & Skill Schema V3.0
   ========================================================================
 */
 
-// Menyiapkan Objek Global untuk menyimpan data selama permainan berjalan
 window.currentUser = null;
 window.playerData = null;
 
-// STRUCTURE V2.1: Menambahkan sasis Item dan Skill ke database pemain
+// STRUCTURE V3.0: Struktur Amunisi, Skill, & XP Database
 const defaultPlayerData = {
+    name: "SOLDIER", // Akan diisi email pemain saat pertama daftar
     level: 1,
     xp: 0,
-    coins: 500, // Diberi modal awal 500 koin untuk tes beli item/skill
+    coins: 500,
     materials: {
         leather: 0,
         iron: 0,
@@ -33,20 +31,17 @@ const defaultPlayerData = {
         health: 1,
         fireRate: 1
     },
-    // BARU: Gudang penyimpanan Item Tempur (Consumables)
     items: {
-        medkit: 1,  // Memperbaiki HP benteng secara instan
-        grenade: 1  // Meledakkan zombi dalam satu area
+        medkit: 0 // Jumlah medkit yang dimiliki
     },
-    // BARU: Pohon Kemampuan / Skill Taktis (Level 0 berarti belum terkunci)
     skills: {
-        airstrike: 0, // Skill Aktif: Serangan bom udara masal (Butuh koin untuk unlock)
-        overdrive: 0  // Skill Aktif: Menggandakan kecepatan tembak sementara
+        airplane: 0, // Amunisi Airplane (Maks 1)
+        armored: 0   // Amunisi Armored Army (Maks 5)
     }
 };
 
 // ==========================================================================
-// 1. SISTEM CUSTOM ALERT (Pengganti alert() bawaan browser)
+// 1. SISTEM ALERT TAKTIS GLOBAL
 // ==========================================================================
 window.customAlert = function(message) {
     return new Promise((resolve) => {
@@ -74,7 +69,7 @@ window.customAlert = function(message) {
 };
 
 // ==========================================================================
-// 2. SISTEM CLOUD SAVE FIREBASE (FIRESTORE)
+// 2. FIREBASE CLOUD SYNC & MIGRATION (V3.0)
 // ==========================================================================
 window.initPlayerData = async function(user) {
     try {
@@ -85,16 +80,19 @@ window.initPlayerData = async function(user) {
         if (docSnap.exists) {
             let dataOnCloud = docSnap.data();
             
-            // Mekanisme Migrasi Data: Memastikan pemain lama otomatis punya slot item & skill tanpa error
-            if (!dataOnCloud.items) dataOnCloud.items = { ...defaultPlayerData.items };
-            if (!dataOnCloud.skills) dataOnCloud.skills = { ...defaultPlayerData.skills };
+            // Migrasi Data V3.0 (Mencegah error bagi pemain lama)
+            if (!dataOnCloud.name) dataOnCloud.name = user.email.split('@')[0].toUpperCase();
+            if (!dataOnCloud.items) dataOnCloud.items = { medkit: 0 };
+            if (!dataOnCloud.skills) dataOnCloud.skills = { airplane: 0, armored: 0 };
             
             window.playerData = dataOnCloud;
-            console.log("[SYSTEM] Data pangkalan berhasil diunduh & dimigrasikan ke v2.1.");
+            console.log("[SYSTEM] Data V3.0 berhasil diunduh.");
         } else {
+            // Prajurit Baru
             window.playerData = JSON.parse(JSON.stringify(defaultPlayerData));
+            window.playerData.name = user.email.split('@')[0].toUpperCase();
             await docRef.set(window.playerData);
-            console.log("[SYSTEM] Dokumen Prajurit Baru v2.1 berhasil dibuat di Cloud.");
+            console.log("[SYSTEM] Dokumen Prajurit V3.0 berhasil dibuat.");
         }
         window.currentUser = user;
         return true;
@@ -110,8 +108,11 @@ window.savePlayerData = async function() {
     
     try {
         const db = window.FirebaseDB;
+        // Menambahkan parameter 'lastUpdate' untuk keperluan Leaderboard
+        window.playerData.lastUpdate = firebase.firestore.FieldValue.serverTimestamp();
+        
         await db.collection("players").doc(window.currentUser.uid).set(window.playerData);
-        console.log("[SYSTEM] Sinkronisasi Data v2.1 Sukses.");
+        console.log("[SYSTEM] Sinkronisasi Data V3.0 Sukses.");
         return true;
     } catch (error) {
         console.error("[CLOUD SAVE ERROR]", error);
@@ -120,12 +121,11 @@ window.savePlayerData = async function() {
 };
 
 // ==========================================================================
-// 3. REGISTRASI SERVICE WORKER (PWA)
+// 3. SERVICE WORKER PWA (LOKAL)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then((reg) => console.log('[SYSTEM] Service Worker v2.1 Online.'))
-            .catch((err) => console.error('[SYSTEM] SW Fail:', err));
+            .then(() => console.log('[SYSTEM] Service Worker V3.0 Online.'));
     });
 }

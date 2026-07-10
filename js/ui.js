@@ -1,260 +1,130 @@
-/* 
-  ========================================================================
-  OPERATION: SURVIVOR APOCALYPS v2.0
-  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
-  TACTICAL AI SUPPORT   : Gemini
+/* ========================================================================
+  OPERATION: SURVIVOR APOCALYPS v3.0 (ACTION-DEFENSE UPDATE)
   FILE                  : js/ui.js
-  DESC                  : Pengendali Logika Lobby, Upgrade, Shop, & Sesi Auth
+  DESC                  : UI Logic, Black Market, Leaderboard, & Sync
   ========================================================================
 */
 
-document.addEventListener('DOMContentLoaded', () => {
-    const auth = window.FirebaseAuth;
+// Fungsi untuk memperbarui tampilan dashboard lobby
+window.updateLobbyUI = function() {
+    if (!window.playerData) return;
+    
+    // Update profil dasar
+    document.getElementById('player-level').textContent = window.playerData.level;
+    document.getElementById('player-name-display').textContent = window.playerData.name;
+    
+    // Update bar XP
+    const xpPercent = Math.min((window.playerData.xp / (window.playerData.level * 100)) * 100, 100);
+    document.getElementById('xp-bar-fill').style.width = xpPercent + "%";
+    document.getElementById('xp-text').textContent = `${window.playerData.xp} / ${window.playerData.level * 100} XP`;
+    
+    // Update gudang
+    document.getElementById('coin-count').textContent = window.playerData.coins;
+    document.getElementById('mat-leather').textContent = window.playerData.materials.leather;
+    document.getElementById('mat-iron').textContent = window.playerData.materials.iron;
+    document.getElementById('mat-crystal').textContent = window.playerData.materials.crystal;
+    document.getElementById('mat-nuke').textContent = window.playerData.materials.nuke;
+    
+    // Update skill amunisi
+    document.getElementById('skill-airplane').textContent = `${window.playerData.skills.airplane} / 1`;
+    document.getElementById('skill-armored').textContent = `${window.playerData.skills.armored} / 5`;
+};
 
-    // Elemen DOM Inti Lobby
+// ==========================================================================
+// 1. SISTEM BLACK MARKET (TUKAR MATERIAL)
+// ==========================================================================
+window.openBlackMarket = function() {
     const modal = document.getElementById('lobby-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalBody = document.getElementById('modal-body');
-    const modalContent = modal ? modal.querySelector('.modal-content') : null;
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    
+    title.textContent = "BLACK MARKET";
+    body.innerHTML = `
+        <div class="flex-column gap-15">
+            <div class="stats-box">
+                <p class="text-small">✈️ Airplane (1x per game)</p>
+                <button id="buy-airplane" class="btn-action">Tukar (200L, 120I, 50C, 3Nuke)</button>
+            </div>
+            <div class="stats-box">
+                <p class="text-small">🛡️ Armored Army (5x per game)</p>
+                <button id="buy-armored" class="btn-action">Tukar (250L, 200I, 45C, 1Nuke)</button>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
 
-    // ==========================================================================
-    // 1. SESSION GUARD & INITIALIZATION
-    // ==========================================================================
-    auth.onAuthStateChanged(async (user) => {
-        if (!user) {
-            // Jika tidak ada sesi login, tendang ke gerbang utama
-            console.warn("[SYSTEM] Akses ditolak. Sesi tidak valid!");
-            window.location.href = 'index.html';
+    // Event Pembelian
+    document.getElementById('buy-airplane').onclick = () => {
+        if (window.playerData.materials.leather >= 200 && window.playerData.materials.iron >= 120 && 
+            window.playerData.materials.crystal >= 50 && window.playerData.materials.nuke >= 3) {
+            
+            window.playerData.materials.leather -= 200;
+            window.playerData.materials.iron -= 120;
+            window.playerData.materials.crystal -= 50;
+            window.playerData.materials.nuke -= 3;
+            window.playerData.skills.airplane = 1;
+            
+            window.savePlayerData();
+            window.updateLobbyUI();
+            window.customAlert("AIRPLANE SIAP DIGUNAKAN!");
         } else {
-            console.log("[SYSTEM] Prajurit Terverifikasi:", user.email);
-            // Inisialisasi data dari Firestore di main.js
-            const ready = await window.initPlayerData(user);
-            if (ready) {
-                // Set nama tampilan dari email militer
-                window.playerData.playerName = user.email.split('@')[0].toUpperCase();
-                updateLobbyUI();
-            }
+            window.customAlert("MATERIAL TIDAK CUKUP!");
         }
-    });
+    };
 
-    // ==========================================================================
-    // 2. REFRESH HUD DISPLAY
-    // ==========================================================================
-    function updateLobbyUI() {
-        if (!window.playerData) return;
-        const data = window.playerData;
-
-        // Profil & Level
-        document.getElementById('player-name-display').textContent = data.playerName || "SOLDIER";
-        document.getElementById('player-level').textContent = data.level;
-        
-        // Kalkulasi Bar XP (Formula: Level * 100)
-        const nextXP = data.level * 100;
-        document.getElementById('xp-text').textContent = `${data.xp} / ${nextXP} XP`;
-        const xpPercent = Math.min((data.xp / nextXP) * 100, 100);
-        document.getElementById('xp-bar-fill').style.width = `${xpPercent}%`;
-
-        // Logistik Gudang
-        document.getElementById('coin-count').textContent = data.coins;
-        document.getElementById('mat-leather').textContent = data.materials.leather;
-        document.getElementById('mat-iron').textContent = data.materials.iron;
-        document.getElementById('mat-crystal').textContent = data.materials.crystal;
-        document.getElementById('mat-nuke').textContent = data.materials.nuke;
-
-        // Rekam Jejak
-        document.getElementById('stat-high-wave').textContent = data.stats.highWave;
-        document.getElementById('stat-total-kills').textContent = data.stats.totalKills;
-        document.getElementById('stat-boss-kills').textContent = data.stats.bossKills;
-    }
-
-    // ==========================================================================
-    // 3. TACTICAL MODAL CONTROLLER
-    // ==========================================================================
-    function openLobbyModal(title, contentHTML, backgroundAsset) {
-        if (!modal || !modalTitle || !modalBody) return;
-        
-        modalTitle.textContent = title;
-        modalBody.innerHTML = contentHTML;
-        
-        // Pasang path background spesifik sesuai parameter menu
-        if (modalContent && backgroundAsset) {
-            modalContent.style.background = `rgba(15, 17, 13, 0.95) url('assets/${backgroundAsset}') no-repeat center center/cover`;
-        } else if (modalContent) {
-            modalContent.style.background = 'var(--color-panel-bg)';
+    document.getElementById('buy-armored').onclick = () => {
+        if (window.playerData.materials.leather >= 250 && window.playerData.materials.iron >= 200 && 
+            window.playerData.materials.crystal >= 45 && window.playerData.materials.nuke >= 1) {
+            
+            window.playerData.materials.leather -= 250;
+            window.playerData.materials.iron -= 200;
+            window.playerData.materials.crystal -= 45;
+            window.playerData.materials.nuke -= 1;
+            window.playerData.skills.armored = 5;
+            
+            window.savePlayerData();
+            window.updateLobbyUI();
+            window.customAlert("ARMORED ARMY SIAP DIGUNAKAN!");
+        } else {
+            window.customAlert("MATERIAL TIDAK CUKUP!");
         }
+    };
+};
 
-        modal.classList.remove('hidden');
-    }
+// ==========================================================================
+// 2. SISTEM LEADERBOARD GLOBAL
+// ==========================================================================
+window.openLeaderboard = async function() {
+    const modal = document.getElementById('lobby-modal');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    
+    title.textContent = "GLOBAL LEADERBOARD";
+    body.innerHTML = "LOADING DATA...";
+    modal.classList.remove('hidden');
 
-    if (document.getElementById('btn-close-modal')) {
-        document.getElementById('btn-close-modal').addEventListener('click', () => {
-            modal.classList.add('hidden');
+    try {
+        const querySnapshot = await window.FirebaseDB.collection("players")
+            .orderBy("xp", "desc").limit(10).get();
+        
+        let html = "";
+        querySnapshot.forEach((doc, index) => {
+            const p = doc.data();
+            const rank = index + 1;
+            html += `
+                <div class="leaderboard-row ${rank <= 3 ? 'rank-' + rank : ''}">
+                    <span>${rank}. ${p.name}</span>
+                    <span>${p.xp} XP ${rank <= 3 ? '🎖️' : ''}</span>
+                </div>
+            `;
         });
+        body.innerHTML = html;
+    } catch (e) {
+        body.innerHTML = "Gagal memuat leaderboard.";
     }
+};
 
-    // ==========================================================================
-    // 4. MENU ARMORY (UPGRADE) - Background: bg-upgrade.png
-    // ==========================================================================
-    document.getElementById('btn-menu-upgrade').addEventListener('click', () => {
-        const up = window.playerData.upgrades;
-        
-        // Formula biaya: Level Saat Ini * 150 Koin
-        const costDmg = up.damage * 150;
-        const costHp = up.health * 150;
-        const costRate = up.fireRate * 250;
-
-        const html = `
-            <div class="flex-column gap-15" style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 4px;">
-                <p class="text-khaki text-small">Tingkatkan efisiensi tempur pasukan pertahanan base menggunakan koin militer.</p>
-                
-                <div class="flex-between align-center border-bottom pb-5">
-                    <div>
-                        <div class="text-gold">WEAPON DAMAGE (Lv.${up.damage})</div>
-                        <div class="text-micro text-khaki">Meningkatkan daya hancur peluru senjata utama.</div>
-                    </div>
-                    <button class="btn-action" style="padding: 10px 15px;" onclick="executeUpgrade('damage', ${costDmg})">UP (${costDmg} C)</button>
-                </div>
-
-                <div class="flex-between align-center border-bottom pb-5">
-                    <div>
-                        <div class="text-gold">BASE FORTRESS HEALTH (Lv.${up.health})</div>
-                        <div class="text-micro text-khaki">Meningkatkan ketahanan maksimum HP dinding pertahanan.</div>
-                    </div>
-                    <button class="btn-action" style="padding: 10px 15px;" onclick="executeUpgrade('health', ${costHp})">UP (${costHp} C)</button>
-                </div>
-
-                <div class="flex-between align-center pb-5">
-                    <div>
-                        <div class="text-gold">MILITARY FIRE RATE (Lv.${up.fireRate})</div>
-                        <div class="text-micro text-khaki">Mempercepat interval tembakan otomatis barisan tentara.</div>
-                    </div>
-                    <button class="btn-action" style="padding: 10px 15px;" onclick="executeUpgrade('fireRate', ${costRate})">UP (${costRate} C)</button>
-                </div>
-            </div>
-        `;
-        openLobbyModal('ARMORY UPGRADES PANEL', html, 'bg-upgrade.png');
-    });
-
-    // Eksekutor Upgrade Global
-    window.executeUpgrade = async function(type, cost) {
-        if (window.playerData.coins >= cost) {
-            window.playerData.coins -= cost;
-            window.playerData.upgrades[type]++;
-            
-            // Simpan lokal & sinkronisasi cloud
-            await window.savePlayerData();
-            updateLobbyUI();
-            modal.classList.add('hidden');
-            await window.customAlert(`SUCCESS: UPGRADE ${type.toUpperCase()} BERHASIL DIALOKASIKAN!`);
-        } else {
-            await window.customAlert("ACCESS DENIED: KOIN MILITER TIDAK MENCUKUPI, KOMANDAN!");
-        }
-    };
-
-    // ==========================================================================
-    // 5. MENU BLACK MARKET (SHOP) - Background: bg-shop.png
-    // ==========================================================================
-    document.getElementById('btn-menu-shop').addEventListener('click', () => {
-        const html = `
-            <div class="flex-column gap-15" style="background: rgba(0,0,0,0.7); padding: 15px; border-radius: 4px;">
-                <p class="text-khaki text-small">Tukarkan material jarahan (loots) perang Anda dengan pasokan koin darurat di pasar gelap.</p>
-                
-                <div class="flex-between align-center border-bottom pb-5">
-                    <div>
-                        <div class="text-gold">JUAL KULIT (LEATHER x10)</div>
-                        <div class="text-micro text-khaki">Imbalan: +100 Koin Militer</div>
-                    </div>
-                    <button class="btn-secondary" style="padding: 8px 12px;" onclick="executeTrade('leather', 10, 100)">TRADE</button>
-                </div>
-
-                <div class="flex-between align-center border-bottom pb-5">
-                    <div>
-                        <div class="text-gold">JUAL BESI (IRON x10)</div>
-                        <div class="text-micro text-khaki">Imbalan: +250 Koin Militer</div>
-                    </div>
-                    <button class="btn-secondary" style="padding: 8px 12px;" onclick="executeTrade('iron', 10, 250)">TRADE</button>
-                </div>
-
-                <div class="flex-between align-center">
-                    <div>
-                        <div class="text-gold">CADANGAN NUKE CORE (NUKE x1)</div>
-                        <div class="text-micro text-khaki">Imbalan: +1000 Koin Militer (Rarity Tinggi)</div>
-                    </div>
-                    <button class="btn-secondary" style="padding: 8px 12px;" onclick="executeTrade('nuke', 1, 1000)">TRADE</button>
-                </div>
-            </div>
-        `;
-        openLobbyModal('BLACK MARKET TRADING', html, 'bg-shop.png');
-    });
-
-    window.executeTrade = async function(matType, amountNeeded, coinReward) {
-        const mats = window.playerData.materials;
-        if (mats[matType] >= amountNeeded) {
-            mats[matType] -= amountNeeded;
-            window.playerData.coins += coinReward;
-            
-            await window.savePlayerData();
-            updateLobbyUI();
-            modal.classList.add('hidden');
-            await window.customAlert(`BARTER BERHASIL: +${coinReward} KOIN MASUK KE KAS!`);
-        } else {
-            await window.customAlert(`TRADE FAILED: MATERIAL ${matType.toUpperCase()} TIDAK CUKUP!`);
-        }
-    };
-
-    // ==========================================================================
-    // 6. MENU CAREER MILESTONES (REWARD KARIER)
-    // ==========================================================================
-    document.getElementById('btn-menu-milestone').addEventListener('click', () => {
-        const lv = window.playerData.level;
-        const html = `
-            <div class="flex-column gap-10 text-center" style="background: rgba(0,0,0,0.6); padding: 15px;">
-                <p class="text-small">Pusat komando memberikan insentif logistik bagi perwira berprestasi tinggi.</p>
-                <div class="stats-box text-gold" style="font-size: 1rem;">STATUS KARIER ANDA: LEVEL ${lv}</div>
-                <p class="text-micro text-khaki">Setiap naik level, bonus koin otomatis dikalibrasi ke server cloud.</p>
-                <button class="btn-action" style="padding: 12px 0;" onclick="window.customAlert('SISTEM OTOMATIS: Semua reward logistik telah disatukan ke kalkulasi klaim pertempuran!')">AMBIL BONUS SEKARANG</button>
-            </div>
-        `;
-        openLobbyModal('MILITARY CAREER MILESTONES', html, null);
-    });
-
-    // ==========================================================================
-    // 7. CLOUD SYNC & DEPLOY ACTION
-    // ==========================================================================
-    document.getElementById('btn-cloud-save').addEventListener('click', async () => {
-        const btn = document.getElementById('btn-cloud-save');
-        btn.disabled = true;
-        btn.textContent = "SINKRONISASI CORES...";
-        
-        const ok = await window.savePlayerData();
-        if (ok) {
-            btn.textContent = "SYNCED SUCCESS!";
-            await window.customAlert("DATA PANGKALAN AMAN DI SERVER CLOUD FIREBASE!");
-        } else {
-            btn.textContent = "SYNC FAILED";
-            await window.customAlert("KONEKSI ERROR: GAGAL MENEMBAKKAN DATA!");
-        }
-        
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.textContent = "SYNC CLOUD SAVE";
-        }, 1500);
-    });
-
-    // Mengirim Pasukan Ke game.html (Medan Tempur)
-    document.getElementById('btn-play').addEventListener('click', () => {
-        window.location.href = 'game.html';
-    });
-
-    // ==========================================================================
-    // 8. LOGOUT SYSTEM
-    // ==========================================================================
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-        try {
-            await auth.signOut();
-            window.location.href = 'index.html';
-        } catch (err) {
-            console.error(err);
-        }
-    });
-});
+// Event Listeners
+document.getElementById('btn-menu-shop').onclick = window.openBlackMarket;
+document.getElementById('btn-menu-leaderboard').onclick = window.openLeaderboard;
+document.getElementById('btn-close-modal').onclick = () => document.getElementById('lobby-modal').classList.add('hidden');
