@@ -166,3 +166,24 @@ button:active { transform: scale(0.95); }
     text-align: center; padding: 20px;
 }
 @media (orientation: landscape) { #landscape-lock-screen { display: none !important; } }
+/* ========================================================================
+   FIX DARURAT: PENGUNCI LANDSCAPE ANTI-BLOCKING
+   ======================================================================== */
+#landscape-lock-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: #0f110d;
+    z-index: 999999;
+    display: none; /* SEMBUNYIKAN SECARA DEFAULT (PC/LANDSCAPE AMAN) */
+    justify-content: center;
+    align-items: center;
+    pointer-events: all;
+}
+
+/* HANYA MUNCUL JIKA LAYAR BERDIRI (PORTRAIT) */
+@media (orientation: portrait) {
+    #landscape-lock-screen {
+        display: flex !important; 
+    }
+}
