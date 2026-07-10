@@ -10,6 +10,14 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <script>
+    // Menangkap semua error JavaScript dan memunculkannya sebagai Alert
+    window.onerror = function(message, source, lineno, colno, error) {
+        alert("💥 DETEKSI ERROR: " + message + "\nDi file: " + source + " (Baris: " + lineno + ")");
+        return false;
+    };
+  </script>
+  
     <meta charset="UTF-8">
     <!-- Peningkatan viewport untuk Fullscreen & Immersive Mode -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, orientation=landscape">
