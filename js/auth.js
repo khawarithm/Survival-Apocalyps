@@ -1,83 +1,89 @@
-/* 
-  ========================================================================
-  OPERATION: SURVIVOR APOCALYPS v2.0
-  COMMANDER / DEVELOPER : [Nama Komandan / Anda]
-  TACTICAL AI SUPPORT   : Gemini
-  FILE                  : js/auth.js
-  DESC                  : Logika Otentikasi (Login/Register) & Session Guard
+/* ========================================================================
+  FILE: js/auth.js (CRASH-PROOF REVISION V3.0)
+  DESC: Mengamankan sistem login dari error null pointer & crash domino
   ========================================================================
 */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mengambil instance Firebase Auth yang sudah disiapkan di firebase-init.js
+    // 1. Amankan Firebase Core
+    if (!window.FirebaseAuth) {
+        console.error("[SYSTEM] Firebase Auth belum siap atau belum dimuat.");
+        return;
+    }
     const auth = window.FirebaseAuth;
-    
-    // Elemen DOM Taktis
-    const boxTitle = document.getElementById('auth-box-title');
-    const btnPrimary = document.getElementById('btn-primary-auth');
-    const toggleMsg = document.getElementById('auth-toggle-msg');
-    const authForm = document.getElementById('auth-form');
 
-    // Status mode form (Default: Login)
-    let isLoginMode = true;
+    // 2. Tangkap elemen dengan toleransi ID Ganda (Mengantisipasi perbedaan nama ID)
+    const btnLogin = document.getElementById('btn-login') || document.getElementById('login-btn');
+    const btnRegister = document.getElementById('btn-register') || document.getElementById('register-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const msg = document.getElementById('auth-msg');
 
-    // Toggle: Beralih antara mode Login dan Register
-    toggleMsg.addEventListener('click', () => {
-        isLoginMode = !isLoginMode;
-        if (isLoginMode) {
-            boxTitle.textContent = "SECURE LOGIN GARRISON";
-            btnPrimary.textContent = "SIGN IN";
-            toggleMsg.textContent = "Belum punya akun? Daftarkan Pasukan Baru";
-        } else {
-            boxTitle.textContent = "REGISTRASI PASUKAN BARU";
-            btnPrimary.textContent = "CREATE ACCOUNT";
-            toggleMsg.textContent = "Sudah terdaftar? Kembali ke Gerbang Login";
+    // ==========================================================================
+    // 3. TAMENG PENGAMAN (ANTI-CRASH)
+    // Jika tombol login tidak ada di halaman ini (misal di lobby/game), matikan script ini dengan aman!
+    // ==========================================================================
+    if (!btnLogin) {
+        console.log("[SYSTEM] Bukan di halaman login. Script auth.js dilewati dengan aman.");
+        return; 
+    }
+
+    // 4. Logika Klik Tombol Login (Hanya berjalan jika btnLogin terdeteksi)
+    btnLogin.addEventListener('click', () => {
+        if (!emailInput || !passwordInput) return;
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            if (msg) msg.textContent = "KOSONG! Isi Email dan PIN Akses.";
+            return;
         }
+
+        if (msg) msg.textContent = "MEMVERIFIKASI KREDENSIAL...";
+        
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                if (msg) {
+                    msg.style.color = "lime";
+                    msg.textContent = "AKSES DITERIMA! Membuka markas...";
+                }
+                window.location.href = 'lobby.html';
+            })
+            .catch((error) => {
+                if (msg) {
+                    msg.style.color = "red";
+                    msg.textContent = "AKSES DITOLAK: " + error.message;
+                }
+            });
     });
 
-    // Proses Submit Form
-    authForm.addEventListener('submit', async (e) => {
-        // Mencegah browser me-reload halaman
-        e.preventDefault(); 
+    // 5. Logika Klik Tombol Register (Hanya berjalan jika btnRegister terdeteksi)
+    if (btnRegister) {
+        btnRegister.addEventListener('click', () => {
+            if (!emailInput || !passwordInput) return;
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
 
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-
-        // Kunci tombol agar tidak ditekan berkali-kali saat proses
-        btnPrimary.disabled = true;
-        btnPrimary.textContent = "PROCESSING...";
-
-        try {
-            if (isLoginMode) {
-                // Eksekusi Login
-                await auth.signInWithEmailAndPassword(email, password);
-                await window.customAlert("OTENTIKASI SUKSES. SELAMAT DATANG KEMBALI, KOMANDAN!");
-                window.location.href = 'lobby.html';
-            } else {
-                // Eksekusi Register
-                await auth.createUserWithEmailAndPassword(email, password);
-                await window.customAlert("PASUKAN BARU BERHASIL DIDAFTARKAN! MEMASUKI MARKAS...");
-                window.location.href = 'lobby.html';
+            if (!email || password.length < 6) {
+                if (msg) msg.textContent = "PIN Akses minimal 6 karakter!";
+                return;
             }
-        } catch (error) {
-            // Tangkap error (contoh: sandi salah, email terdaftar, dll)
-            console.error("[AUTH ERROR]", error);
-            
-            // Tampilkan pesan error menggunakan UI Custom Alert militer kita
-            await window.customAlert(`AKSES DITOLAK: ${error.message.toUpperCase()}`);
-            
-            // Buka kembali kunci tombol
-            btnPrimary.disabled = false;
-            btnPrimary.textContent = isLoginMode ? "SIGN IN" : "CREATE ACCOUNT";
-        }
-    });
 
-    // SESSION GUARD: Cegah pasukan yang sudah login berada di gerbang
-    auth.onAuthStateChanged((user) => {
-        // Jika user terdeteksi login dan sedang berada di index.html (Gerbang)
-        if (user && window.location.pathname.endsWith('index.html')) {
-            console.log("[SYSTEM] Sesi aktif terdeteksi. Membuka gerbang ke Markas.");
-            window.location.href = 'lobby.html';
-        }
-    });
+            if (msg) msg.textContent = "MENDAFTARKAN PRAJURIT BARU...";
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    if (msg) {
+                        msg.style.color = "lime";
+                        msg.textContent = "REGISTRASI BERHASIL! Silakan ketuk tombol Login.";
+                    }
+                })
+                .catch((error) => {
+                    if (msg) {
+                        msg.style.color = "red";
+                        msg.textContent = "GAGAL: " + error.message;
+                    }
+                });
+        });
+    }
 });
